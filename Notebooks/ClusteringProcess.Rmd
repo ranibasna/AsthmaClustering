@@ -5,8 +5,12 @@ date: "2024-02-07"
 output: html_document
 ---
 
-#load libraries  and images
-```{r}
+# load libraries 
+
+
+```{r, echo=FALSE, message=FALSE, results='hide'}
+# library("factoextra")
+
 library(naniar)
 library(knitr)
 library(missRanger)
@@ -15,12 +19,25 @@ library(dplyr)
 library(ggpubr)
 library(finalfit)
 library(haven)
-```
 
+library(NbClust)
+library(clValid)
+
+library(tibble)
+library(tidyverse)
+#
+library(M3C)
+library(diceR)
+
+library(stringi)
+library(tidymodels)
+library(mltools) # for the function one_hot
+library(data.table) # for the function "as.data.table"
+```
 # Load and clean the data
 
 ```{r DataClean}
-WSAS_phenotyping_data <- haven::read_spss("../ Updated asthma phenotyping files/WSAS_phenotyping_data.sav")
+WSAS_phenotyping_data <- haven::read_spss("../Updated_asthma_phenotyping_files/WSAS_phenotyping_data.sav")
 data <- WSAS_phenotyping_data
 
 # Take out the ID and COHORT variables 
@@ -94,7 +111,105 @@ miceObj
 ```
 
 
+```{r}
+# save miceObj as rds file
+saveRDS(miceObj, file = "miceObj.rds")
+```
+
+# Clustering
 
 
+```{r, echo=FALSE, results='hide'}
+source("../R_code/Rfunctions.R")
+```
+
+# Data preparation only asthamtic data
+
+```{r}
+# load the data
+miceObj <- readRDS("miceObj.rds")
+dataList <- miceRanger::completeData(miceObj)
+imp_data <- dataList[[1]] %>% as_tibble()
+# Select the ordinal variables
+ordinal_varaibles <- imp_data %>% select(where(is.factor)) %>% names() %>% setdiff(c(Correct_twolevs,twolevs))
+ordinal_varaibles
+# Convert factor to ordinal variables
+imp_data[ordinal_varaibles] <- lapply(imp_data[ordinal_varaibles],function(x) {factor(x,ordered = TRUE)})
+```
+
+
+```{r}
+# get percentage os missing values for each variable
+miss_perc <- apply(data, 2, function(x) sum(is.na(x))/length(x))
+miss_perc
+# select varaible that have more than 60% missing values 
+var_miss_60 <- names(miss_perc[miss_perc > 0.6])
+```
+
+
+```{r}
+# Remove the variables that have more than 60% missing values as they considered auxiliary variables
+data_no_aux <- imp_data  %>% select(-all_of(var_miss_60))
+# select asthmatic persons
+asthmatic_data <- data_no_aux %>% filter(asthma == 'Yes')
+# one hot encode the data without the auxiliary variables
+OH_data_no_aux <- OH_dummy_scale(prepared_data = asthmatic_data %>% select(- asthma))
+
+# Save OH_data and OH_data_no_aux as csv files
+# write.csv(OH_data_no_aux, file = "../Intermediates/SavedObjects/OH_data_no_aux_as.csv")
+```
+
+## Optimal number 
+
+### Internal 
+```{r}
+Nb_OH_as <- NbClust(OH_data_no_aux, distance = "manhattan", min.nc = 3, max.nc = 8, method = "kmeans")
+```
+
+
+```{r InternalValidation}
+# Nb_OH <- NbClust(OH_data, distance = "euclidean", min.nc = 3, max.nc = 8, method = "kmeans")
+Nb_OH_Euclidian_as <- NbClust(OH_data_no_aux, distance = "euclidean", min.nc = 3, max.nc = 8, method = "kmeans")
+```
+
+```{r InternalValidation}
+clmethods <- c("hierarchical","kmeans","pam")
+internal_validation_OH_as <-clValid(as.data.frame(OH_data_no_aux), clMethods = clmethods, nClust = 3:8, validation = 'internal', maxitems = 2000, method = 'ward')
+summary(internal_validation_OH_as)
+```
+
+
+# Assemble the data
+
+```{r}
+# Data assemble
+# read the original data
+# WSAS_phenotyping_data <- haven::read_spss("../Updated asthma phenotyping files/WSAS_phenotyping_data.sav")
+# add the variables Adult_onset_asthma, ID and the cohort variables from the WSAS_phenotyping_data to the imputed data as columns 
+imp_full_data <- cbind(imp_data, WSAS_phenotyping_data %>% select(Adult_onset_asthma, ID, cohort))
+# read the clustering results
+# result_OH_IDEC_No_aux_3 <- read.csv("../Intermediates/SavedObjects/result_as_FcIDEC_clusters_3.csv")
+result_OH_DEC_No_aux_4 <- read.csv("../Intermediates/SavedObjects/result_as_HPDEC_clusters_4.csv")
+
+# Add the clustering results to the full imputed data. this mean we should add the cluster column in the result_OH_IDEC_No_aux_3 data frame to the imp_full_data. Note that the clustering is done on only asthmatic patients so we need to have NA the raw is for non-asthmatic patient i.e when asthma == "NO" we should have NA
+filtered_imp_df <- imp_full_data %>% filter(asthma == "Yes")
+filtered_imp_df$cluster_label <- result_OH_DEC_No_aux_4$cluster 
+imp_full_data <- imp_full_data %>% left_join(filtered_imp_df %>% select(ID, cluster_label), by = "ID")
+# save the imp_full_data
+# write.csv(imp_full_data, file = "../Intermediates/SavedObjects/imp_full_data.csv")
+# save the imp_full_data as rds file
+saveRDS(imp_full_data, file = "../Intermediates/SavedObjects/Imp_Labeld_data_full.rds")
+```
+
+```{r}
+# read the rds imp_full_data
+imp_full_data <- readRDS("../Intermediates/SavedObjects/Imp_Labeld_data_full.rds")
+imp_full_data
+```
+
+# ```{r}
+# diff_features <- setdiff(names(WSAS_phenotyping_data), names(imp_full_data))
+# any(is.na(imp_full_data %>% filter(asthma=="No") %>% pull(cluster_label)))
+# ```
 
 
