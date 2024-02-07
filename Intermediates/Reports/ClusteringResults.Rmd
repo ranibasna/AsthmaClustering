@@ -1,0 +1,124 @@
+---
+title: "Clustering_results_report"
+# output: html_document
+# date: '2024-01-24'
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+output:
+  html_document:
+    # theme: united
+    highlight: tango
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+    number_sections: yes
+---
+
+<!-- ```{r setup, include=FALSE} -->
+<!-- knitr::opts_chunk$set(echo = TRUE) -->
+<!-- ``` -->
+
+```{r, echo=FALSE, results='hide'}
+source("../../R_code/Rfunctions.R")
+```
+
+```{r, include=FALSE}
+library(tidyverse)
+```
+
+# Clustring Processed data without auxiliary variables
+
+
+```{r loadData, include=FALSE}
+miceObj <- readRDS("../SavedObjects/miceObj.rds")
+dataList <- miceRanger::completeData(miceObj)
+my_imp_data <- dataList[[1]]
+```
+
+
+
+## Imporved Deep Empedding Clustering on the encoded data 6 clusters {.tabset}
+
+```{r OH_IDEC_6,  echo=FALSE, results='asis', message=FALSE, warning=FALSE}
+# get the clusters
+result_OH_IDEC_No_aux_6 <- read.csv("../SavedObjects/result_FcIDEC_clusters_6.csv")
+# IDEC results on OH
+results_cluster_data <- get_ClusterResults(OriginalData = my_imp_data, Labels = result_OH_IDEC_No_aux_6$cluster) 
+# Remove asthma variable from the results
+results_cluster_data <- results_cluster_data %>% select(-asthma)
+cat(
+  knitr::knit_child('Clustering_res_temp.Rmd', envir = environment(), quiet = TRUE), sep = '\n'
+  )
+```
+
+## Imporved Deep Empedding Clustering on the encoded data 4 clusters {.tabset}
+
+```{r OH_IDEC_4,  echo=FALSE, results='asis', message=FALSE, warning=FALSE}
+# get the clusters
+result_OH_IDEC_No_aux_4 <- read.csv("../SavedObjects/result_FcIDEC_clusters_4.csv")
+# IDEC results on OH
+results_cluster_data <- get_ClusterResults(OriginalData = my_imp_data, Labels = result_OH_IDEC_No_aux_4$cluster) 
+# Remove asthma variable from the results
+results_cluster_data <- results_cluster_data %>% select(-asthma)
+cat(
+  knitr::knit_child('Clustering_res_temp.Rmd', envir = environment(), quiet = TRUE), sep = '\n'
+  )
+```
+
+## Imporved Deep Empedding Clustering on the encoded data 3 clusters {.tabset}
+
+```{r OH_IDEC_3,  echo=FALSE, results='asis', message=FALSE, warning=FALSE}
+# get the clusters
+result_OH_IDEC_No_aux_3 <- read.csv("../SavedObjects/result_FcIDEC_clusters_3.csv")
+# IDEC results on OH
+results_cluster_data <- get_ClusterResults(OriginalData = my_imp_data, Labels = result_OH_IDEC_No_aux_3$cluster) 
+# Remove asthma variable from the results
+results_cluster_data <- results_cluster_data %>% select(-asthma)
+cat(
+  knitr::knit_child('Clustering_res_temp.Rmd', envir = environment(), quiet = TRUE), sep = '\n'
+  )
+```
+
+## Deep Empedding Clustering on the encoded data 6 clusters {.tabset}
+
+```{r OH_DEC_6,  echo=FALSE, results='asis', message=FALSE, warning=FALSE}
+# get the clusters
+result_OH_DEC_No_aux_6 <- read.csv("../SavedObjects/result_DEC_clusters_6.csv")
+# IDEC results on OH
+results_cluster_data <- get_ClusterResults(OriginalData = my_imp_data, Labels = result_OH_DEC_No_aux_6$cluster) 
+# Remove asthma variable from the results
+results_cluster_data <- results_cluster_data %>% select(-asthma)
+cat(
+  knitr::knit_child('Clustering_res_temp.Rmd', envir = environment(), quiet = TRUE), sep = '\n'
+  )
+```
+
+## Deep Empedding Clustering on the encoded data 4 clusters {.tabset}
+
+```{r OH_DEC_4,  echo=FALSE, results='asis', message=FALSE, warning=FALSE}
+# get the clusters
+result_OH_DEC_No_aux_4 <- read.csv("../SavedObjects/result_DEC_clusters_4.csv")
+# IDEC results on OH
+results_cluster_data <- get_ClusterResults(OriginalData = my_imp_data, Labels = result_OH_DEC_No_aux_4$cluster) 
+# Remove asthma variable from the results
+results_cluster_data <- results_cluster_data %>% select(-asthma)
+cat(
+  knitr::knit_child('Clustering_res_temp.Rmd', envir = environment(), quiet = TRUE), sep = '\n'
+  )
+```
+
+## Deep Empedding Clustering on the encoded data 3 clusters {.tabset}
+
+```{r OH_DEC_3,  echo=FALSE, results='asis', message=FALSE, warning=FALSE}
+# get the clusters
+result_OH_DEC_No_aux_3 <- read.csv("../SavedObjects/result_DEC_clusters_3.csv")
+# IDEC results on OH
+results_cluster_data <- get_ClusterResults(OriginalData = my_imp_data, Labels = result_OH_DEC_No_aux_3$cluster) 
+# Remove asthma variable from the results
+results_cluster_data <- results_cluster_data %>% select(-asthma)
+cat(
+  knitr::knit_child('Clustering_res_temp.Rmd', envir = environment(), quiet = TRUE), sep = '\n'
+  )
+```
+
+
+

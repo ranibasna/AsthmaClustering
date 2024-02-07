@@ -1,0 +1,100 @@
+---
+title: "ClusteringReport"
+author: "Rani Basna"
+date: "2024-02-07"
+output: html_document
+---
+
+#load libraries  and images
+```{r}
+library(naniar)
+library(knitr)
+library(missRanger)
+library(doParallel)
+library(dplyr)
+library(ggpubr)
+library(finalfit)
+library(haven)
+```
+
+# Load and clean the data
+
+```{r DataClean}
+WSAS_phenotyping_data <- haven::read_spss("../ Updated asthma phenotyping files/WSAS_phenotyping_data.sav")
+data <- WSAS_phenotyping_data
+
+# Take out the ID and COHORT variables 
+data <- data |> select(-ID,-cohort)
+#CONVERT ALL CHARACTER VARIABLES INTO FACTORS 
+data <-  data |> mutate_if(is.character, as.factor)
+# Replace the outliers value 234600 for the Age variable with NA
+data$Age[data$Age == 234600] <- NA
+# Convert the value of the onset_age_asthma variable for all cases with asthma is 'No' to -1 using tidy approach 
+data$onset_age_asthma[data$asthma == "0"] <- -1
+```
+
+# data Labeling
+
+```{r, include=FALSE}
+## select all factors with two levels 
+twolevs <- data |> select(where(~ nlevels(.x)==3|nlevels(.x)==2), -allergen_triggered_asthma,-exertion_triggered_asthma,-infection_triggered_asthma,-irritant_triggered_asthma,-weather_triggered_asthma,-emotion_triggered_asthma) |> names()
+
+data[twolevs] <- lapply(data[twolevs],function(x) {factor(x,levels = c("0","1"),labels = c("No", "Yes"))})  
+
+Correct_twolevs <-  c("allergen_triggered_asthma", "exertion_triggered_asthma", "infection_triggered_asthma", "irritant_triggered_asthma", "weather_triggered_asthma", "emotion_triggered_asthma") 
+```
+
+
+## correctly label variable with more than two levels 
+
+```{r include=FALSE}
+# Convert education to a factor with specified levels and labels
+data$gina_steps <- factor(data$gina_steps, levels = c("0","1","2","3"), labels = c("onlys saba or non users", "step 1 or 2","step3","step4 or 5"))
+data$education <- factor(data$education, levels = c("0", "1", "2"), labels = c("primary", "secondary", "tertiary"))
+data$smoking_status <- factor(data$smoking_status, levels = c("0", "1", "2"), labels = c("never smoker","former smokers","current smoker"))
+
+# Access the levels of the gina_control variable
+current_levels_gina <- levels(data$gina_control)
+# Replace the empty string "" with NA in the levels
+levels(data$gina_control)[current_levels_gina == ""] <- NA
+```
+
+##  Convert to ordinal variables
+
+
+```{r}
+ordinal_varaibles <- data %>% select(where(is.factor)) %>% names() %>% setdiff(c(Correct_twolevs,twolevs))
+ordinal_varaibles
+# Convert factor to ordinal variables
+data[ordinal_varaibles] <- lapply(data[ordinal_varaibles],function(x) {factor(x,ordered = TRUE)})
+data %>% select(all_of(ordinal_varaibles)) %>% lapply(levels)
+```
+
+# Imputation
+
+```{r}
+#For imputaion exclude data on ID variable 
+# data <- data |> select(-ID(),- Adult_onset_asthma)
+data <- data |> select(- Adult_onset_asthma)
+library(doParallel)
+cl <- makeCluster(2)
+registerDoParallel(cl)
+
+# install.packages("miceRanger")
+library(miceRanger)
+  seqTime <- system.time(
+  miceObj <- miceRanger(
+     data
+    , m=5
+    , returnModels = TRUE
+    , verbose=FALSE
+  )
+)
+miceObj
+```
+
+
+
+
+
+
