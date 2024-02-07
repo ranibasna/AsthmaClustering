@@ -84,36 +84,35 @@ ordinal_varaibles <- data %>% select(where(is.factor)) %>% names() %>% setdiff(c
 ordinal_varaibles
 # Convert factor to ordinal variables
 data[ordinal_varaibles] <- lapply(data[ordinal_varaibles],function(x) {factor(x,ordered = TRUE)})
-data %>% select(all_of(ordinal_varaibles)) %>% lapply(levels)
 ```
 
 # Imputation
 
-```{r}
-#For imputaion exclude data on ID variable 
-# data <- data |> select(-ID(),- Adult_onset_asthma)
-data <- data |> select(- Adult_onset_asthma)
-library(doParallel)
-cl <- makeCluster(2)
-registerDoParallel(cl)
-
-# install.packages("miceRanger")
-library(miceRanger)
-  seqTime <- system.time(
-  miceObj <- miceRanger(
-     data
-    , m=5
-    , returnModels = TRUE
-    , verbose=FALSE
-  )
-)
-miceObj
-```
+<!-- # ```{r} -->
+<!-- # #For imputaion exclude data on ID variable  -->
+<!-- # # data <- data |> select(-ID(),- Adult_onset_asthma) -->
+<!-- # data <- data |> select(- Adult_onset_asthma) -->
+<!-- # library(doParallel) -->
+<!-- # cl <- makeCluster(2) -->
+<!-- # registerDoParallel(cl) -->
+<!-- #  -->
+<!-- # # install.packages("miceRanger") -->
+<!-- # library(miceRanger) -->
+<!-- #   seqTime <- system.time( -->
+<!-- #   miceObj <- miceRanger( -->
+<!-- #      data -->
+<!-- #     , m=5 -->
+<!-- #     , returnModels = TRUE -->
+<!-- #     , verbose=FALSE -->
+<!-- #   ) -->
+<!-- # ) -->
+<!-- # miceObj -->
+<!-- # ``` -->
 
 
 ```{r}
 # save miceObj as rds file
-saveRDS(miceObj, file = "miceObj.rds")
+# saveRDS(miceObj, file = "miceObj.rds")
 ```
 
 # Clustering
@@ -162,12 +161,12 @@ OH_data_no_aux <- OH_dummy_scale(prepared_data = asthmatic_data %>% select(- ast
 ## Optimal number 
 
 ### Internal 
-```{r}
+```{r InternalValidationManhattan}
 Nb_OH_as <- NbClust(OH_data_no_aux, distance = "manhattan", min.nc = 3, max.nc = 8, method = "kmeans")
 ```
 
 
-```{r InternalValidation}
+```{r InternalValidationEuclidean}
 # Nb_OH <- NbClust(OH_data, distance = "euclidean", min.nc = 3, max.nc = 8, method = "kmeans")
 Nb_OH_Euclidian_as <- NbClust(OH_data_no_aux, distance = "euclidean", min.nc = 3, max.nc = 8, method = "kmeans")
 ```
