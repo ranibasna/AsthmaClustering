@@ -1,0 +1,17 @@
+# Ignore these directories:
+Updated_asthma_phenotyping_files
+logs/
+Intermediates/SavedObjects/  
+Intermediates/Reports/Clustering_res_temp.Rmd
+
+Notebooks/ae_weights.h5
+Notebooks/ClusterAnalysisInitial.Rmd 
+Notebooks/miceObj.rds
+Notebooks/results/
+Notebooks/missing_data_analysis.Rmd
+Notebooks/missing_data_analysis_main.Rmd
+Notebooks/IDEC_allergen.ipynb
+# Ignore temporary files:
+.log.tmp
+.Rhistory
+.Rproj.user
